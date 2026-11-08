@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - run: go vet ./...
+      - run: go test ./...
+      - name: Windows build compiles
+        run: GOOS=windows go vet ./...
+
+  release:
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Build static binaries
+        env:
+          CGO_ENABLED: '0'
+        run: |
+          mkdir dist
+          for target in linux/amd64 linux/arm64 windows/amd64; do
+            os=${target%/*}; arch=${target#*/}; ext=; [ "$os" = windows ] && ext=.exe
+            GOOS=$os GOARCH=$arch go build -trimpath -ldflags="-s -w" \
+              -o "dist/infisical-secrets-$os-$arch$ext" ./cmd/infisical-secrets
+          done
+          (cd dist && sha256sum * > SHA256SUMS)
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" dist/* --title "$GITHUB_REF_NAME" --generate-notes
