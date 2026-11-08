@@ -17,6 +17,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
+          cache: false
       - run: go vet ./...
       - run: go test ./...
       - name: Windows build compiles
@@ -33,6 +34,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
+          cache: false
       - name: Build static binaries
         env:
           CGO_ENABLED: '0'
