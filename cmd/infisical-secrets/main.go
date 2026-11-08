@@ -101,9 +101,16 @@ func parse(args []string) (*opts, error) {
 	return o, nil
 }
 
+// version is set by the release build (-X main.version=YYYY.MM.DD.N).
+var version = "dev"
+
 func main() { os.Exit(run(os.Args[1:], os.Stdin, os.Stdout)) }
 
 func run(argv []string, stdin io.Reader, stdout io.Writer) int {
+	if len(argv) == 1 && argv[0] == "--version" {
+		fmt.Fprintln(stdout, version)
+		return 0
+	}
 	o, err := parse(argv)
 	if err != nil {
 		if err.Error() == "help" {

@@ -44,4 +44,9 @@ with `--admin`: `INFISICAL_ADMIN_CLIENT_ID` / `INFISICAL_ADMIN_CLIENT_SECRET`.
 go vet ./... && go test ./...
 ```
 
-A push of a tag `v*` builds the binaries and publishes a GitHub release.
+Every push to `main` is a release (`.github/workflows/version.yml`): tests, then `VERSION`
+becomes `YYYY.MM.DD.N` (Europe/Amsterdam), tag `v<VERSION>`, and GitHub release `<VERSION>` with
+the binaries and `SHA256SUMS`. Never bump `VERSION` by hand. `infisical-secrets --version` shows it.
+
+Go note: these tags are not semver, so `go get github.com/strammermax/homelab-go@v2026.11.08.1`
+resolves to a pseudo-version of that commit; that is fine.
